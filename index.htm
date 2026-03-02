@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5840578396396045"
+     crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RANDGEN — AI Image Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600&display=swap');
+:root {
+  --bg:#0c0c0c; --card:#141414; --border:#222;
+  --lime:#c6f135; --orange:#ff6a2f; --blue:#3fa9ff;
+  --text:#f0f0f0; --muted:#555;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--lime);}
+.logo span{color:var(--orange);}
+.status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);letter-spacing:2px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background .3s;}
+.dot.on{background:var(--lime);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{display:grid;grid-template-columns:350px 1fr;min-height:calc(100vh - 57px);}
+.sidebar{border-right:1px solid var(--border);padding:20px 18px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;}
+.lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--card);padding:3px;border-radius:3px;border:1px solid var(--border);}
+.tab{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:9px;border:none;border-radius:2px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
+.tab.on{background:var(--lime);color:#000;font-weight:600;}
+.panel{display:none;flex-direction:column;gap:8px;}
+.panel.show{display:flex;}
+textarea{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px;border-radius:3px;resize:vertical;min-height:85px;outline:none;transition:border-color .2s;line-height:1.6;}
+textarea:focus{border-color:var(--lime);}
+textarea::placeholder{color:var(--muted);}
+.examples{font-size:10px;color:var(--muted);line-height:2.0;}
+.ex{color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+.ex:hover{color:var(--lime);}
+.preview{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:11px;font-size:12px;color:var(--text);line-height:1.7;min-height:70px;word-break:break-word;transition:border-color .2s,box-shadow .2s;}
+.preview em{color:var(--muted);font-style:normal;}
+.preview.flash{border-color:var(--lime);box-shadow:0 0 12px rgba(198,241,53,.2);}
+.btn-roll{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:9px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;}
+.btn-roll:hover{border-color:var(--lime);color:var(--lime);}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.sbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;padding:7px 3px;border-radius:2px;cursor:pointer;transition:all .15s;text-align:center;}
+.sbtn:hover{border-color:var(--lime);color:var(--lime);}
+.sbtn.on{background:var(--lime);color:#000;border-color:var(--lime);font-weight:600;}
+.crow{display:flex;align-items:center;gap:10px;}
+.crow input[type=range]{flex:1;accent-color:var(--lime);}
+.cval{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--lime);min-width:22px;text-align:center;}
+
+/* FOLDER BOX */
+.folder-box{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:9px;}
+.folder-row{display:flex;align-items:center;gap:8px;}
+.folder-path{flex:1;font-size:10px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:7px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.folder-path.set{color:var(--lime);border-color:rgba(198,241,53,.3);}
+.btn-folder{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 12px;border:1px solid var(--lime);border-radius:2px;background:transparent;color:var(--lime);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.btn-folder:hover{background:rgba(198,241,53,.08);}
+.save-opts{display:flex;gap:14px;}
+.opt{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);cursor:pointer;user-select:none;}
+.opt input{accent-color:var(--lime);cursor:pointer;}
+.opt:hover{color:var(--text);}
+.naming-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);}
+.naming-row select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 7px;border-radius:2px;outline:none;flex:1;}
+.folder-note{font-size:9px;color:var(--muted);line-height:1.7;}
+
+.btn{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:13px;border:none;border-radius:2px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+.btn-gen{background:var(--lime);color:#000;font-weight:600;}
+.btn-gen:hover{background:#d4ff3e;transform:translateY(-1px);}
+.btn-gen:active{transform:none;}
+.btn-gen:disabled{background:var(--muted);color:#888;cursor:not-allowed;transform:none;}
+.btn-toggle{background:var(--lime);color:#000;font-weight:600;font-size:14px;letter-spacing:3px;}
+.btn-toggle:hover{background:#d4ff3e;transform:translateY(-1px);}
+.btn-toggle.running{background:var(--orange);color:#fff;}
+.btn-toggle.running:hover{background:#ff8050;}
+.arow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-bottom:6px;}
+.arow select{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 8px;border-radius:2px;outline:none;}
+.stats{border-top:1px solid var(--border);padding-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sval{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--lime);line-height:1;}
+.slbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+
+.garea{padding:22px;overflow-y:auto;}
+.ghdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.gtitle{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--muted);}
+.btn-clr{background:transparent;border:1px solid #2a2a2a;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;transition:all .15s;}
+.btn-clr:hover{border-color:var(--orange);color:var(--orange);}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:340px;gap:12px;color:var(--muted);}
+.empty-icon{font-size:52px;opacity:.2;}
+.empty-txt{font-size:11px;letter-spacing:2px;text-transform:uppercase;text-align:center;line-height:2.2;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:3px;overflow:hidden;transition:transform .2s,border-color .2s;animation:cardIn .3s ease;}
+@keyframes cardIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.card:hover{transform:translateY(-2px);border-color:#2a2a2a;}
+.img-wrap{aspect-ratio:1;position:relative;overflow:hidden;background:#0a0a0a;}
+.img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.skeleton{position:absolute;inset:0;background:linear-gradient(90deg,#141414 25%,#1c1c1c 50%,#141414 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.img-wrap.loaded .skeleton{display:none;}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(12,12,12,.85);}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-lbl{font-size:9px;letter-spacing:2px;color:var(--lime);text-transform:uppercase;}
+.cbody{padding:9px 11px;}
+.cprompt{font-size:10px;color:var(--muted);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:7px;}
+.cactions{display:flex;gap:5px;}
+.btn-save,.btn-copy{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px;border-radius:2px;cursor:pointer;transition:all .15s;text-align:center;}
+.btn-save:hover{border-color:var(--lime);color:var(--lime);}
+.btn-copy:hover{border-color:var(--orange);color:var(--orange);}
+.btn-save:disabled{opacity:.35;cursor:not-allowed;}
+.saved-badge{font-size:9px;color:var(--lime);letter-spacing:.5px;padding:4px 2px;word-break:break-all;line-height:1.5;}
+
+.loading-bar{height:2px;background:var(--lime);position:fixed;top:0;left:0;transition:width .4s;z-index:9999;box-shadow:0 0 8px var(--lime);}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--lime);color:#000;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1px;padding:11px 18px;border-radius:3px;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.175,.885,.32,1.275);z-index:1000;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{background:var(--orange);color:#fff;}
+
+@media(max-width:768px){.main{grid-template-columns:1fr;}.sidebar{border-right:none;border-bottom:1px solid var(--border);}}
+</style>
+</head>
+<body>
+<div class="loading-bar" id="loadingBar" style="width:0%"></div>
+
+<header>
+  <div class="logo">RAND<span>GEN</span></div>
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <span id="statusTxt">READY</span>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+
+    <div>
+      <div class="lbl">⚙️ Input Mode</div>
+      <div class="tabs">
+        <button class="tab" id="tabDirect" onclick="setMode('direct')">✏️ Manual</button>
+        <button class="tab on" id="tabRandom" onclick="setMode('random')">🎲 Random</button>
+      </div>
+    </div>
+
+    <!-- Manual Input -->
+    <div class="panel" id="panelDirect">
+      <div class="lbl">✏️ Prompt</div>
+      <textarea id="directInput" placeholder="Describe the image you want...&#10;e.g. a red panda drinking coffee, studio lighting"></textarea>
+      <div class="examples">
+        Examples:
+        <span class="ex" onclick="fill('a lone samurai in cherry blossom rain, cinematic')">Samurai</span> ·
+        <span class="ex" onclick="fill('a futuristic city at night, neon cyberpunk')">Cyberpunk</span> ·
+        <span class="ex" onclick="fill('a magical forest with glowing mushrooms, fantasy')">Magic Forest</span> ·
+        <span class="ex" onclick="fill('an astronaut floating in deep space, ultra realistic')">Astronaut</span>
+      </div>
+    </div>
+
+    <!-- Random -->
+    <div class="panel show" id="panelRandom">
+      <div class="lbl">🎲 Random Prompt</div>
+      <div class="preview" id="preview"><em>Click the button below to roll a prompt</em></div>
+      <button class="btn-roll" onclick="rollPrompt()">🔀 Roll New Prompt</button>
+    </div>
+
+    <!-- Style -->
+    <div>
+      <div class="lbl">🎨 Style</div>
+      <div class="sgrid" id="sgrid">
+        <button class="sbtn on" data-s="photorealistic">Photo</button>
+        <button class="sbtn" data-s="oil painting">Oil Paint</button>
+        <button class="sbtn" data-s="anime illustration">Anime</button>
+        <button class="sbtn" data-s="watercolor">Watercolor</button>
+        <button class="sbtn" data-s="cyberpunk digital art">Cyberpunk</button>
+        <button class="sbtn" data-s="pencil sketch">Sketch</button>
+        <button class="sbtn" data-s="pixel art">Pixel Art</button>
+        <button class="sbtn" data-s="cinematic film still">Cinematic</button>
+      </div>
+    </div>
+
+    <!-- Batch Settings -->
+    <div>
+      <div class="lbl">🎯 Batch Size</div>
+      <div class="crow">
+        <input type="range" id="batchSlider" min="10" max="100" step="10" value="20" oninput="updateBatchLabel(this.value)">
+        <div class="cval" id="batchVal">20</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Images per batch</div>
+    </div>
+
+    <!-- Save Settings -->
+    <div>
+      <div class="lbl">💾 Save Settings</div>
+      <div class="folder-box">
+        <div class="folder-row">
+          <div class="folder-path" id="folderPath">Select a folder</div>
+          <button class="btn-folder" onclick="selectFolder()">📂 Browse</button>
+        </div>
+        <div class="save-opts">
+          <label class="opt"><input type="checkbox" id="autoSave"> Auto Save</label>
+          <label class="opt"><input type="checkbox" id="addTimestamp" checked> Timestamp</label>
+        </div>
+        <div class="naming-row">
+          <span>Filename:</span>
+          <select id="namingScheme">
+            <option value="seed">Seed ID</option>
+            <option value="prompt">Prompt</option>
+            <option value="timestamp">Timestamp</option>
+            <option value="index">Index</option>
+          </select>
+        </div>
+        <div class="folder-note">
+          📂 Select folder to enable auto-save (Chrome/Edge)<br>
+          Without folder, use manual download button
+        </div>
+      <div class="folder-note" style="margin-top:8px;color:#ffb347;">
+⚠ Notice: To prevent potential account limits or review flags, it is recommended to upload a maximum of 50 images per day to stock platforms.
+</div>
+      </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button class="btn btn-toggle" id="toggleBtn" onclick="toggleBatch()">▶ START GENERATING</button>
+
+    <!-- Progress -->
+    <div id="progressSection" style="display:none;">
+      <div class="lbl">📊 Progress</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:3px;overflow:hidden;height:8px;margin-bottom:6px;">
+        <div id="progressBar" style="height:100%;background:var(--lime);width:0%;transition:width .3s;box-shadow:0 0 8px rgba(198,241,53,.4);"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);" id="progressText">0 / 0</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div>
+        <div class="sval" id="totalCnt">0</div>
+        <div class="slbl">Generated</div>
+      </div>
+      <div>
+        <div class="sval" id="savedCnt">0</div>
+        <div class="slbl">Saved</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="garea">
+    <div class="ghdr">
+      <div class="gtitle">GALLERY</div>
+      <button class="btn-clr" onclick="clearGallery()">Clear Gallery</button>
+    </div>
+    <div class="gallery" id="gallery">
+      <div class="empty">
+        <div class="empty-icon">🖼</div>
+        <div class="empty-txt">No images yet<br>Enter a prompt or<br>roll a random one</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const subjects = [
+  // 💰 금융/성장/비즈니스 컨셉 (~70개)
+  "an abstract upward growth curve made of light","a golden coin stack on a dark background",
+  "a rising arrow made of glowing particles","an abstract financial graph with light trails",
+  "a golden bar chart rising upward","a glowing upward trend line on dark background",
+  "abstract rising bars of light","a pile of gold coins with soft light",
+  "a glowing arrow pointing upward","an abstract stock market chart in light",
+  "a golden coin with rising line","abstract financial data visualization",
+  "an upward spiral of light particles","gold bars stacked on a reflective surface",
+  "an abstract growth concept with ascending lines","a glowing bar graph on dark blue",
+  "abstract money flow lines in gold","a golden upward curve on black background",
+  "a glowing financial chart background","rising light beams on dark background",
+  "abstract economy growth visualization","a golden arrow breaking through a barrier",
+  "upward steps made of light","abstract investment growth concept",
+  "a glowing pyramid of light","a golden helix rising upward",
+  "a bright light at the end of a tunnel","a golden balance scale on dark",
+  "rising gold bars on black","golden particles flowing upward",
+  "a glowing stock ticker abstract","rising percentages in golden light",
+  "a golden coin rain on dark background","abstract revenue increase concept",
+  "golden light rays breaking upward","abstract bull market visualization",
+  "a glowing percentage sign in gold","abstract ROI visualization",
+  "golden network of financial connections","a rising rocket made of gold light",
+  "glowing gold bars in a dark space","abstract portfolio growth concept",
+  "a glowing safe with golden light","abstract economic prosperity",
+  "golden number one on dark background","a glowing wallet with light",
+  "abstract wealth accumulation concept","a glowing dollar sign abstract",
+  "abstract capital growth concept","abstract compound interest visualization",
+  "abstract financial freedom concept","a golden scale tipping upward",
+  "abstract profit margin visualization","a glowing piggy bank on dark",
+  "abstract fund flow concept","golden coins stacking animation concept",
+  "abstract fiscal year growth","a glowing bank building silhouette",
+  "abstract interest rate concept","a golden gear with rising arrow",
+  "abstract dividend concept","a glowing stock certificate",
+  "abstract market expansion","golden wave on dark background",
+  "abstract value proposition concept","a glowing credit card abstract",
+  "abstract cash flow visualization","golden light tunnel perspective",
+
+  // 🔵 기술/AI/데이터/네트워크 (~70개)
+  "an abstract neural network of glowing nodes","a blue digital data network on dark background",
+  "abstract AI brain made of light connections","a glowing globe with data lines",
+  "abstract blue circuit board pattern","a purple and blue data stream background",
+  "glowing network nodes connected by lines","abstract cloud computing visualization",
+  "a blue digital network sphere","abstract data flow lines on dark background",
+  "a glowing digital matrix background","abstract technology connection web",
+  "a futuristic circuit pattern in blue","abstract cyber network visualization",
+  "glowing data particles in blue and purple","abstract internet of things network",
+  "a digital earth with glowing connections","abstract blockchain network visualization",
+  "blue holographic data visualization","abstract server network in blue glow",
+  "glowing nodes in a dark space","abstract machine learning visualization",
+  "a purple digital wave background","abstract cybersecurity shield concept",
+  "glowing fiber optic light trails","abstract big data concept visualization",
+  "a blue binary code background","abstract quantum computing visualization",
+  "glowing blue hexagon pattern","abstract wireless signal visualization",
+  "blue light trails on black background","abstract 5G network visualization",
+  "a glowing blue sphere with data","digital particles forming a network",
+  "abstract smart city data network","glowing microchip pattern",
+  "a glowing blue data vortex","abstract edge computing visualization",
+  "glowing code lines on dark background","a pulsing data heartbeat line",
+  "glowing AI chip on dark surface","abstract deep learning visualization",
+  "a blue glowing server stack","abstract API network flow",
+  "blue digital brain waves","glowing database structure",
+  "abstract computer vision visualization","blue technology mesh background",
+  "abstract automation flow chart","a glowing circuit with energy pulses",
+  "abstract satellite network visualization","blue scanning laser grid",
+  "glowing algorithm pathway","abstract digital twin concept",
+  "abstract IoT device network","a glowing VPN tunnel abstract",
+  "abstract real-time data stream","blue neon data highway",
+  "abstract GPU processing visualization","glowing binary sphere",
+  "abstract distributed system concept","a glowing API endpoint",
+  "abstract microservices architecture","blue data encryption concept",
+  "abstract code deployment pipeline","glowing tech startup concept",
+
+  // 🎨 배경 텍스처/패턴 (~30개 — 비율 줄임)
+  "a clean white marble texture","a smooth gradient from blue to purple",
+  "a soft pink pastel gradient background","a white paper texture with subtle grain",
+  "a smooth black leather texture","a soft gold foil texture background",
+  "a soft watercolor wash background","a clean light grey gradient background",
+  "a smooth brushed metal texture","a soft lavender gradient background",
+  "a dark blue velvet texture","a clean terrazzo pattern",
+  "a soft orange and pink gradient","a smooth ceramic white texture",
+  "a soft teal gradient background","a dark charcoal texture background",
+  "a smooth rose gold gradient","a subtle grid pattern on white",
+  "a soft coral gradient background","a smooth granite texture",
+  "a smooth frosted glass texture","a soft cloud texture background",
+  "a smooth rose marble texture","a clean brushed gold texture",
+  "a dark emerald green background","a smooth carbon fiber pattern",
+  "a soft holographic foil texture","a smooth bronze metallic texture",
+  "a soft dusty pink background","a smooth chrome texture",
+
+  // 💡 문제해결/컨셉/상징 (~70개)
+  "a glowing open door in a dark hallway","a bright light breaking through storm clouds",
+  "a single path splitting into two roads","a ladder reaching up into bright light",
+  "a puzzle piece clicking into place","abstract broken wall with light shining through",
+  "a bridge over a dark gap","a key unlocking a glowing lock",
+  "a seedling growing from cracked ground","a glowing lightbulb on dark background",
+  "a chain breaking apart in light","a road leading toward bright horizon",
+  "abstract maze with glowing exit","a glowing target with arrow",
+  "a compass pointing toward light","a staircase leading into the light",
+  "a seed sprouting into a glowing tree","a glowing checkmark on dark background",
+  "a single candle flame in darkness","a lighthouse beam in dark fog",
+  "a glowing infinity symbol","a rising phoenix from ashes concept",
+  "a broken chain with glowing light","a compass rose on dark background",
+  "a glowing magnifying glass on dark","a lock opening with golden light",
+  "a bridge connecting two glowing points","a dark cloud with silver lining",
+  "a hand reaching toward a bright star","a cracked egg with light emerging",
+  "a glowing gear turning in darkness","abstract synergy concept",
+  "a glowing trophy on dark background","a rocket launching upward in light",
+  "a burning torch in darkness","a glowing star on dark background",
+  "a glowing path through a dark forest","a butterfly emerging from a cocoon",
+  "a glowing arrow in a target center","a glowing scale balancing two sides",
+  "a glowing brain with lightbulb","connected dots becoming a shape",
+  "abstract power and energy concept","a glowing crown on dark background",
+  "abstract resilience and strength concept","abstract clarity from confusion concept",
+  "abstract transformation concept","abstract renewal concept",
+  "abstract focus and precision concept","abstract strategy concept",
+  "a glowing shield protecting a shape","abstract metamorphosis visualization",
+  "a glowing handshake silhouette","a glowing milestone marker",
+  "abstract breakthrough concept","a glowing flag at summit",
+  "abstract turning point concept","a glowing fork in the road",
+  "abstract horizon expanding concept","a glowing spark igniting",
+  "abstract momentum concept","a glowing thread connecting dots",
+  "abstract ripple effect concept","a glowing foundation stone",
+  "abstract pivot concept","a glowing launch countdown",
+  "abstract vision becoming reality","a glowing bridge being built",
+  "abstract obstacles becoming stepping stones","a glowing path diverging",
+
+  // 🌿 자연/미니멀 (~60개)
+  "a single tree silhouette at golden sunset","a minimal mountain range silhouette",
+  "a calm ocean horizon at sunrise","a single leaf with water drops",
+  "a misty forest with light rays","a minimal wave on white background",
+  "a field of wheat at golden hour","a lone tree on a hilltop at dusk",
+  "a minimal bird silhouette on a wire","a snowflake on dark background",
+  "a single flower on white background","a calm lake reflection at dawn",
+  "abstract flowing water texture","a minimal desert sand dune",
+  "a sunbeam through forest trees","a single stone in still water",
+  "a minimal cloud on blue sky","a raindrop ripple on water surface",
+  "a mountain peak above clouds","a single cherry blossom branch",
+  "minimal ocean waves pattern","a sunrise gradient over the sea",
+  "a minimal cactus silhouette","a single feather on clean background",
+  "abstract smoke on black background","a single dandelion with seeds floating",
+  "a minimal forest path with light","a lone pine tree in snow",
+  "a single autumn leaf on white","a minimal sunset horizon line",
+  "a single tulip on white background","abstract fog rolling over hills",
+  "a single rock balanced in water","a moonrise over dark horizon",
+  "a minimal lightning bolt on dark","a single rose on black background",
+  "a minimal starry night sky","a single wheat stalk on white",
+  "a minimal waterfall silhouette","a minimal birch tree silhouette",
+  "a single lotus on dark water","a minimal desert horizon",
+  "a minimal wave crashing on rock","a single fern leaf on white",
+  "a minimal fog over a lake","abstract wind through tall grass",
+  "a single oak tree in a field","a minimal river winding through plains",
+  "a single snowdrop flower","a minimal sun rising on horizon",
+  "a minimal sand ripple pattern","a solitary mountain in mist",
+  "a single pine branch with snow","a minimal tide pool reflection",
+  "a lone lighthouse on dark horizon","a single bamboo stalk",
+  "a minimal rolling hill at dusk","a single coral branch on dark",
+
+  // 🔮 추상/아트/그라데이션 (~60개)
+  "abstract colorful paint splash on white","a smooth gradient sphere on dark background",
+  "abstract fluid art in blue and gold","a glowing neon line abstract",
+  "abstract geometric shapes in pastel","a colorful liquid marble texture",
+  "abstract watercolor splash background","a glowing ring of light on dark background",
+  "abstract low poly geometric background","a vibrant color explosion abstract",
+  "abstract flowing lines in gradient","a minimal geometric composition",
+  "abstract bokeh circles of light","a glowing spiral on dark background",
+  "a smooth metallic wave abstract","abstract ink drop in water",
+  "a glowing aurora abstract background","abstract crystal formation texture",
+  "a smooth flowing ribbon abstract","a glowing geometric pattern",
+  "abstract cosmic dust background","abstract glass refraction texture",
+  "a glowing plasma wave abstract","abstract oil and water texture",
+  "a smooth color gradient blob","a glowing fractal pattern",
+  "abstract iridescent surface texture","a smooth liquid metal abstract",
+  "abstract kaleidoscope pattern","a glowing vortex abstract",
+  "abstract prism light refraction","a smooth soap bubble texture",
+  "abstract topographic lines pattern","a colorful splash of ink",
+  "abstract fluid simulation","a glowing orb of light",
+  "abstract magnetic field lines","colorful powder explosion abstract",
+  "abstract sound wave visualization","a glowing crystal prism",
+  "abstract thermal heat map","colorful tie-dye pattern abstract",
+  "abstract cymatics pattern","a glowing holographic surface",
+  "abstract light interference pattern","colorful nebula texture abstract",
+  "abstract flow field visualization","abstract paint pour texture",
+  "a glowing wireframe sphere","abstract color bloom visualization",
+  "a glowing geometric web","abstract lenticular wave pattern",
+  "a smooth gradient tunnel perspective","abstract color field study",
+  "a glowing ring stack abstract","abstract diffraction grating texture",
+
+  // 🏥 의료/건강/웰니스 컨셉 (~35개)
+  "a glowing heart on dark background","abstract DNA helix in blue light",
+  "a glowing brain neural network","abstract medical cross symbol in light",
+  "a heartbeat line on dark background","abstract wellness and balance concept",
+  "a glowing green leaf health symbol","a glowing atom symbol abstract",
+  "abstract cell division visualization","a glowing lotus flower symbol",
+  "abstract mindfulness circle concept","a zen stone balance on white",
+  "a glowing green cross symbol","abstract body energy visualization",
+  "a glowing pulse wave","abstract healing light concept",
+  "a glowing pill capsule on dark","abstract blood cell visualization",
+  "a glowing stethoscope icon","abstract virus protection shield",
+  "a glowing brain scan concept","abstract mental health concept",
+  "a glowing red heart cardiogram","a glowing spine silhouette",
+  "abstract body balance concept","a glowing medical scan abstract",
+  "abstract immune system visualization","a glowing syringe abstract",
+  "abstract cellular health concept","a glowing microscope icon",
+  "abstract biotech visualization","a glowing health meter",
+  "abstract wellbeing circle concept","a glowing meditation symbol",
+  "abstract brain wave visualization",
+
+  // 🌱 환경/지속가능 컨셉 (~35개)
+  "a glowing green earth symbol","abstract renewable energy visualization",
+  "a minimal solar panel on blue sky","a wind turbine silhouette at sunset",
+  "a glowing green leaf on dark background","abstract carbon neutral concept",
+  "a water drop with earth reflection","abstract ecosystem balance concept",
+  "a growing plant in light beams","abstract recycling cycle visualization",
+  "a glowing green tree symbol","abstract sustainability network",
+  "a solar panel array aerial view","a wind farm silhouette at dusk",
+  "abstract green energy flow","a glowing water drop on dark",
+  "abstract zero waste concept","a green sprout on cracked earth",
+  "abstract clean air concept","a glowing earth from space",
+  "abstract ocean conservation concept","a glowing forest canopy from above",
+  "abstract biodiversity concept","a green leaf network abstract",
+  "abstract climate action concept","a glowing sun energy symbol",
+  "abstract carbon footprint concept","a glowing electric bolt on dark",
+  "abstract green hydrogen concept","a glowing recycling symbol",
+  "abstract net zero concept","a glowing wave energy symbol",
+  "abstract reforestation concept","a glowing soil microbiome",
+  "abstract clean water concept",
+
+  // 🎯 마케팅/광고 컨셉 (~35개)
+  "a glowing megaphone on dark background","abstract viral spread visualization",
+  "a glowing speech bubble on dark","abstract brand awareness concept",
+  "a glowing like button abstract","abstract social media reach concept",
+  "a glowing email icon on dark","abstract marketing funnel visualization",
+  "a glowing shopping cart abstract","abstract customer journey concept",
+  "a glowing review star on dark","abstract conversion concept",
+  "a glowing analytics graph","abstract audience targeting concept",
+  "a glowing engagement metric","abstract content strategy concept",
+  "a glowing ROI arrow","abstract brand identity concept",
+  "a glowing campaign launch","abstract growth hacking concept",
+  "a glowing hashtag symbol","abstract influencer network concept",
+  "a glowing click cursor on dark","abstract A/B testing concept",
+  "a glowing notification bell","abstract omnichannel concept",
+  "abstract lead generation funnel","a glowing loyalty badge",
+  "abstract viral loop concept","a glowing ad impression icon",
+  "abstract brand equity concept","a glowing call-to-action button",
+  "abstract user acquisition concept",
+
+  // 🏗️ 건축/부동산 컨셉 (~30개)
+  "a minimal modern house silhouette","a glowing building blueprint",
+  "abstract architectural lines","a minimal skyscraper silhouette",
+  "a glowing floor plan abstract","abstract urban development concept",
+  "a minimal bridge silhouette","a glowing home icon on dark",
+  "abstract real estate concept","a minimal cityscape silhouette",
+  "a glowing key on dark background","abstract investment property concept",
+  "a minimal roof and house shape","a glowing apartment building",
+  "abstract smart home concept","a minimal construction crane silhouette",
+  "a glowing property value arrow","abstract location pin concept",
+  "a minimal neighborhood map","abstract building materials concept",
+  "a glowing house frame abstract","abstract renovation concept",
+  "a minimal arch and column","abstract zoning concept",
+  "a glowing door knocker","abstract foundation concept",
+  "a minimal staircase silhouette","abstract property management concept",
+  "a glowing window frame","abstract modular home concept",
+  "a minimal rooftop garden","abstract mixed use development",
+
+  // ✈️ 여행/글로벌 컨셉 (~30개)
+  "a glowing plane trail on dark sky","abstract global connection concept",
+  "a minimal passport and map","a glowing compass on dark",
+  "abstract travel route visualization","a minimal airplane silhouette",
+  "a glowing map pin on dark","abstract world connectivity concept",
+  "a minimal hot air balloon","a glowing globe with flight paths",
+  "abstract adventure concept","a minimal mountain and moon",
+  "a glowing suitcase icon","abstract nomadic lifestyle concept",
+  "a minimal cloud and plane","abstract destination concept",
+  "a glowing world map abstract","abstract cultural exchange concept",
+  "a minimal passport stamp","abstract journey milestone concept",
+  "a glowing route on a map","abstract border crossing concept",
+  "a minimal ship on the horizon","abstract expedition concept",
+  "a glowing location beacon","abstract tourism concept",
+  "a minimal train silhouette","abstract road trip concept",
+  "a glowing time zone clock","abstract adventure begins concept"
+];
+
+const settings = [
+  // 스튜디오/단색
+  "on a clean black background","on a clean white background",
+  "on a dark navy background","on a pure white seamless background",
+  "on a soft grey gradient background","on a deep black studio background",
+  "on a clean minimal light background","on a dark moody background",
+  "on a clean white marble surface","on a reflective dark surface",
+  "on a smooth gradient background","on a soft blurred background",
+  "floating in a dark void","on a clean studio surface",
+  "on a dark blue gradient background","on a deep space black background",
+  "on a soft white fog background","on a clean dark charcoal background",
+  "on a soft cream background","on a deep rich burgundy background",
+  "on a dark forest green background","on a clean slate grey background",
+  "on a soft warm beige background","on a deep midnight blue background",
+  "on a clean silver grey background","on a rich dark brown background",
+  "on a soft champagne background","on a deep purple background",
+  "on a clean soft white background","on a dark gunmetal background",
+  "on a deep teal background","on a soft blush background",
+  "on a dark olive background","on a clean cobalt blue background",
+
+  // 추상 공간
+  "in an abstract digital space","in a dark cyberspace environment",
+  "in a minimal abstract composition","in a deep space background",
+  "in a glowing energy field","in an abstract light environment",
+  "in a dark atmospheric space","in a clean geometric space",
+  "in an ethereal light environment","in a minimal void",
+  "in a dramatic light and shadow setting","in an abstract universe",
+  "in a deep blue digital realm","in a glowing abstract environment",
+  "in a dark gradient atmosphere","in a minimal modern composition",
+  "in a luminous abstract space","in a soft haze environment",
+  "in a dark cinematic atmosphere","in a glowing particle field",
+  "in a quantum field abstract","in a dreamlike soft environment",
+  "in a high-tech digital environment","in a cosmic abstract space",
+
+  // 자연 배경
+  "against a sunset sky","against a clear blue sky",
+  "against a stormy dramatic sky","in a misty atmospheric setting",
+  "against a golden hour background","in a foggy atmospheric scene",
+  "against a starry night sky","in a dramatic cloudscape",
+  "against a soft bokeh nature background","in a hazy morning atmosphere",
+  "against an overcast grey sky","against a deep blue ocean horizon",
+  "against a twilight purple sky","against a stormy dark sky",
+  "against a pastel dawn sky","against a deep orange sunset",
+  "against a dramatic mountain skyline","against a clear starry galaxy",
+  "against a soft green forest","against a bright midday sky"
+];
+
+const moods = [
+  // 전문 스톡 스타일
+  "professional stock photography style","clean commercial background design",
+  "premium stock image quality","high resolution 4K sharp detail",
+  "clean minimal modern aesthetic","dramatic high contrast lighting",
+  "soft elegant studio lighting","bold graphic design style",
+  "cinematic color grading","professional product photography",
+  "premium luxury aesthetic","modern flat design style",
+  "no text no logos clean design","suitable for commercial use",
+  "seamless background design","isolated on clean background",
+  "perfect for website backgrounds","ideal for presentation use",
+  "suitable for banner ads","perfect for corporate materials",
+  "ideal as design asset","print ready quality",
+  "web optimized crisp detail","suitable for editorial use",
+  "perfect for social media graphics","ideal for marketing materials",
+  "clean vector style quality","suitable for book covers",
+  "perfect for app backgrounds","ideal for UI design",
+
+  // 색감/톤
+  "deep blue and purple color scheme","gold and black luxury palette",
+  "clean white and grey minimal","bright blue and white tech style",
+  "dark moody dramatic tones","soft pastel gentle tones",
+  "vibrant gradient neon colors","warm golden amber tones",
+  "cool silver and blue tones","rich green and gold palette",
+  "deep navy and gold luxury","clean monochromatic grey tones",
+  "bright cyan and dark blue","warm orange and dark contrast",
+  "purple and pink gradient","clean black and white minimal",
+  "soft teal and white fresh","bold red and dark dramatic",
+  "electric blue glowing tones","emerald green and dark luxury",
+  "warm terracotta and cream","cool nordic minimal palette",
+  "soft blush and rose gold","deep indigo and gold",
+  "bright lime and dark contrast","soft sage and white minimal",
+  "rich burgundy and gold","cool steel blue and white",
+  "warm sand and dark brown","vibrant coral and dark",
+  "soft mint and white clean","deep forest green and gold",
+  "warm copper and dark","cool lavender and white",
+  "bright yellow and dark contrast","soft powder blue and white",
+  "deep crimson and black","warm olive and cream",
+  "cool aqua and dark blue","soft peach and white",
+  "deep charcoal and gold","bright magenta and dark",
+
+  // 기술적 품질
+  "ultra sharp photorealistic detail","perfect studio lighting quality",
+  "smooth clean rendering","high detail texture quality",
+  "professional color balance","crisp edges perfect detail",
+  "deep rich colors","flawless gradient quality",
+  "clean composition no clutter","perfect exposure balance",
+  "high dynamic range quality","sharp focus throughout"
+];
+let mode = 'random', style = 'photorealistic', randPrompt = '';
+let isGenerating = false, batchStopped = false;
+let totalGen = 0, totalSaved = 0, imgIndex = 0;
+let folderHandle = null;
+// Concurrency: how many images load in parallel
+const CONCURRENCY = 1;
+const DELAY_MS = 2000;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabDirect').classList.toggle('on', m==='direct');
+  document.getElementById('tabRandom').classList.toggle('on', m==='random');
+  document.getElementById('panelDirect').classList.toggle('show', m==='direct');
+  document.getElementById('panelRandom').classList.toggle('show', m==='random');
+}
+
+function fill(txt) { document.getElementById('directInput').value = txt; }
+
+document.getElementById('sgrid').addEventListener('click', e => {
+  if (!e.target.classList.contains('sbtn')) return;
+  document.querySelectorAll('.sbtn').forEach(b => b.classList.remove('on'));
+  e.target.classList.add('on');
+  style = e.target.dataset.s;
+});
+
+function rollPrompt() {
+  const s = subjects[Math.floor(Math.random()*subjects.length)];
+  const sc = settings[Math.floor(Math.random()*settings.length)];
+  const m = moods[Math.floor(Math.random()*moods.length)];
+  randPrompt = `${s} ${sc}, ${m}`;
+  const el = document.getElementById('preview');
+  el.textContent = randPrompt;
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 600);
+  return randPrompt;
+}
+
+function getPrompt() {
+  if (mode === 'direct') {
+    const v = document.getElementById('directInput').value.trim();
+    if (!v) { toast('Please enter a prompt!', true); return null; }
+    return v + ', ' + style;
+  }
+  return rollPrompt() + ', ' + style;
+}
+
+// Folder selection (File System Access API)
+async function selectFolder() {
+  if (!('showDirectoryPicker' in window)) {
+    toast('Please use Chrome or Edge browser!', true); return;
+  }
+  try {
+    folderHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    const el = document.getElementById('folderPath');
+    el.textContent = '📁 ' + folderHandle.name;
+    el.classList.add('set');
+    document.getElementById('autoSave').checked = true;
+    toast('📁 ' + folderHandle.name + ' selected! Auto-save ON');
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Folder selection failed', true);
+  }
+}
+
+function makeFileName(seed, prompt) {
+  const ts = document.getElementById('addTimestamp').checked
+    ? '_' + new Date().toISOString().slice(0,19).replace(/[-T:]/g,'') : '';
+  const scheme = document.getElementById('namingScheme').value;
+  let base = '';
+  if (scheme === 'seed') base = 'img_' + seed;
+  else if (scheme === 'prompt') base = prompt.replace(/[^a-zA-Z0-9 ]/g,'').slice(0,30).trim().replace(/ /g,'_') || 'img';
+  else if (scheme === 'timestamp') base = 'img_' + new Date().toISOString().slice(0,19).replace(/[-T:]/g,'');
+  else base = 'img_' + String(++imgIndex).padStart(4,'0');
+  return base + ts + '.png';
+}
+
+async function saveToFolder(blob, filename) {
+  if (!folderHandle) return false;
+  try {
+    const fh = await folderHandle.getFileHandle(filename, { create: true });
+    const w = await fh.createWritable();
+    await w.write(blob); await w.close();
+    return true;
+  } catch(e) { return false; }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function setStatus(on, txt) {
+  document.getElementById('dot').className = 'dot' + (on ? ' on' : '');
+  document.getElementById('statusTxt').textContent = txt;
+}
+
+let loadInt = null, loadProg = 0;
+function startBar() {
+  loadProg = 0;
+  const b = document.getElementById('loadingBar'); b.style.width='0%';
+  loadInt = setInterval(() => { loadProg = Math.min(loadProg+Math.random()*7,85); b.style.width=loadProg+'%'; }, 300);
+}
+function endBar() {
+  clearInterval(loadInt);
+  const b = document.getElementById('loadingBar'); b.style.width='100%';
+  setTimeout(() => b.style.width='0%', 500);
+}
+
+function updateBatchLabel(v) {
+  document.getElementById('batchVal').textContent = v;
+}
+
+function toggleBatch() {
+  if (isGenerating) {
+    // Turn OFF — stop
+    batchStopped = true;
+    const btn = document.getElementById('toggleBtn');
+    btn.textContent = '⏹ STOPPING...';
+  } else {
+    // Turn ON — start
+    startBatch();
+  }
+}
+
+async function startBatch() {
+  if (isGenerating) return;
+
+  if (mode === 'direct') {
+    const v = document.getElementById('directInput').value.trim();
+    if (!v) { toast('Please enter a prompt!', true); return; }
+  }
+
+  const target = parseInt(document.getElementById('batchSlider').value);
+  isGenerating = true;
+  batchStopped = false;
+
+  const btn = document.getElementById('toggleBtn');
+  btn.textContent = '⏹ STOP';
+  btn.classList.add('running');
+
+  setStatus(true, 'GENERATING'); startBar();
+
+  const gallery = document.getElementById('gallery');
+  const empty = gallery.querySelector('.empty');
+  if (empty) empty.remove();
+
+  document.getElementById('progressSection').style.display = 'block';
+  updateProgress(0, target);
+
+  let completed = 0;
+  const queue = Array.from({length: target});
+
+  const workers = Array(CONCURRENCY).fill(null).map(async (_, workerIdx) => {
+    // Stagger worker start to avoid burst
+    await new Promise(r => setTimeout(r, workerIdx * 800));
+    while (queue.length > 0 && !batchStopped) {
+      queue.shift();
+      const p = mode === 'direct'
+        ? document.getElementById('directInput').value.trim() + ', ' + style
+        : rollPrompt() + ', ' + style;
+      await addCard(p, gallery);
+      completed++;
+      totalGen++;
+      document.getElementById('totalCnt').textContent = totalGen;
+      updateProgress(completed, target);
+      // Delay between requests to avoid rate limiting
+      if (!batchStopped && queue.length > 0) {
+        await new Promise(r => setTimeout(r, DELAY_MS));
+      }
+    }
+  });
+
+  await Promise.all(workers);
+
+  endBar();
+  isGenerating = false;
+  btn.textContent = '▶ START GENERATING';
+  btn.classList.remove('running');
+  setStatus(false, batchStopped ? 'STOPPED' : 'DONE ✓');
+  toast(batchStopped ? `Stopped at ${completed} images.` : `✅ Done! ${completed} images generated.`);
+}
+
+function updateProgress(done, total) {
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${total}  (${pct}%)`;
+}
+
+async function addCard(prompt, gallery) {
+  const seed = Math.floor(Math.random()*999999);
+  const cardId = 'c' + seed;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = cardId;
+  card.innerHTML = `
+    <div class="img-wrap" id="w${seed}">
+      <div class="skeleton"></div>
+      <div class="overlay"><div class="spinner"></div><div class="gen-lbl" id="lbl${seed}">QUEUED...</div></div>
+    </div>
+    <div class="cbody">
+      <div class="cprompt">${prompt}</div>
+      <div class="cactions">
+        <button class="btn-save" id="bs${seed}" disabled>💾 Save</button>
+        <button class="btn-copy" onclick="copyP('${encodeURIComponent(prompt)}')">📋 Copy</button>
+      </div>
+      <div id="badge${seed}"></div>
+    </div>`;
+  gallery.insertBefore(card, gallery.firstChild);
+
+  try {
+    // Step 1: Submit job to Stable Horde
+    const submitRes = await fetch('https://stablehorde.net/api/v2/generate/async', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': '0000000000'
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        params: {
+          width: 512,
+          height: 512,
+          steps: 20,
+          cfg_scale: 7,
+          seed: String(seed),
+          sampler_name: 'k_euler'
+        },
+        models: ['stable_diffusion'],
+        r2: true
+      })
+    });
+
+    if (!submitRes.ok) throw new Error('Submit failed');
+    const { id } = await submitRes.json();
+
+    // Step 2: Poll until done
+    const setLbl = (t) => {
+      const el = document.getElementById('lbl'+seed);
+      if (el) el.textContent = t;
+    };
+
+    let imgUrl = null;
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      if (batchStopped) return;
+
+      const statusRes = await fetch(`https://stablehorde.net/api/v2/generate/check/${id}`);
+      const status = await statusRes.json();
+      setLbl(`WAIT ${status.wait_time || '?'}s`);
+
+      if (status.done) {
+        const resultRes = await fetch(`https://stablehorde.net/api/v2/generate/status/${id}`);
+        const result = await resultRes.json();
+        imgUrl = result.generations?.[0]?.img;
+        break;
+      }
+    }
+
+    if (!imgUrl) throw new Error('Timeout');
+
+    // Step 3: Show image
+    const wrap = document.getElementById('w'+seed);
+    if (wrap) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = async () => {
+        wrap.innerHTML = '';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        wrap.appendChild(img);
+        wrap.classList.add('loaded');
+
+        const saveBtn = document.getElementById('bs'+seed);
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.onclick = () => manualSave(imgUrl, encodeURIComponent(prompt), seed, saveBtn);
+        }
+
+        // Auto save
+        if (document.getElementById('autoSave').checked && folderHandle) {
+          try {
+            const resp = await fetch(imgUrl);
+            const blob = await resp.blob();
+            const fname = makeFileName(seed, prompt);
+            const ok = await saveToFolder(blob, fname);
+            if (ok) {
+              totalSaved++;
+              document.getElementById('savedCnt').textContent = totalSaved;
+              if (saveBtn) { saveBtn.textContent = '✅ Saved'; saveBtn.disabled = true; }
+              const badge = document.getElementById('badge'+seed);
+              if (badge) { badge.className = 'saved-badge'; badge.textContent = '📁 ' + fname; }
+              toast('Auto-saved: ' + fname);
+            }
+          } catch(e) {}
+        }
+      };
+      img.onerror = () => {
+        wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:10px;letter-spacing:2px">FAILED</div>`;
+      };
+      img.src = imgUrl;
+    }
+
+  } catch(e) {
+    const wrap = document.getElementById('w'+seed);
+    if (wrap) wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:10px;letter-spacing:2px">FAILED — ${e.message}</div>`;
+  }
+}
+
+async function manualSave(url, enc, seed, btn) {
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const prompt = decodeURIComponent(enc);
+    const fname = makeFileName(seed, prompt);
+
+    if (folderHandle) {
+      const ok = await saveToFolder(blob, fname);
+      if (ok) {
+        btn.textContent = '✅ Saved';
+        totalSaved++; document.getElementById('savedCnt').textContent = totalSaved;
+        const badge = document.getElementById('badge'+seed);
+        if (badge) { badge.className = 'saved-badge'; badge.textContent = '📁 ' + fname; }
+        toast('📁 Saved to folder: ' + fname);
+        return;
+      }
+    }
+    downloadBlob(blob, fname);
+    btn.textContent = '✅ Saved';
+    totalSaved++; document.getElementById('savedCnt').textContent = totalSaved;
+    toast('⬇️ Downloaded: ' + fname);
+  } catch(e) {
+    btn.textContent = '💾 Save'; btn.disabled = false;
+    toast('Save failed. Please try again.', true);
+  }
+}
+
+function copyP(enc) {
+  navigator.clipboard.writeText(decodeURIComponent(enc)).then(() => toast('Prompt copied!'));
+}
+
+function clearGallery() {
+  document.getElementById('gallery').innerHTML = `<div class="empty"><div class="empty-icon">🖼</div><div class="empty-txt">No images yet<br>Enter a prompt or<br>roll a random one</div></div>`;
+  document.getElementById('progressSection').style.display = 'none';
+  totalGen=0; totalSaved=0;
+  document.getElementById('totalCnt').textContent=0;
+  document.getElementById('savedCnt').textContent=0;
+}
+
+let toastT;
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast'+(err?' err':'')+' show';
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+<!-- ===== Startup Ad Screen ===== -->
+<div id="adOverlay" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#0c0c0c;
+z-index:99999999;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+color:white;
+font-family:sans-serif;
+">
+
+<h2 style="margin-bottom:10px;">Preparing AI Model...</h2>
+<div id="adTimer" style="opacity:0.7;margin-bottom:18px;">5 seconds remaining</div>
+
+<!-- Real ad will go here later -->
+<div id="realAd" style="
+width:360px;
+height:200px;
+background:#151515;
+border:1px solid #2a2a2a;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:#888;
+font-size:18px;
+">
+Loading advertisement...
+</div>
+
+<button onclick="skipAd()" style="
+margin-top:20px;
+padding:10px 20px;
+background:#3fa9ff;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+">Skip</button>
+
+</div>
+
+<script>
+let adSec = 5;
+const adTxt = document.getElementById("adTimer");
+
+const adInterval = setInterval(()=>{
+adSec--;
+adTxt.innerText = adSec + " seconds remaining";
+if(adSec<=0){
+clearInterval(adInterval);
+document.getElementById("adOverlay").style.display="none";
+}
+},1000);
+
+function skipAd(){
+clearInterval(adInterval);
+document.getElementById("adOverlay").style.display="none";
+}
+</script>
+<!-- ===== End Startup Ad Screen ===== -->
+</body>
+</html>
